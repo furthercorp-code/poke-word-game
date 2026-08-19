@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Pokémon Guessing Game ⚡</title>
+    <!-- These links load the engine that lets Python run on a website -->
+    <link rel="stylesheet" href="https://pyscript.net" />
+    <script type="module" src="https://pyscript.net"></script>
+</head>
+<body style="font-family: sans-serif; background-color: #121212; color: white; padding: 20px; text-align: center;">
+
+    <h1>🎮 My Pokémon Word Game</h1>
+    <p>The game engine is booting up! Please wait a few seconds...</p>
+    <hr style="border-color: #333;">
+
+    <!-- This script tag holds your exact Python code -->
+    <script type="py">
+import requests
+import string
+import random
+# We use a placeholder for your art so the website doesn't crash from a missing file!
+pokeball_art = """
+   ______
+  /      \\
+ /  ____  \\
+
+|  (____)  |
+ \\        /
+  \\______/
+"""
+
+def get_random_pokemon():
+    response = requests.get("https://pokeapi.co/api/v2/pokemon/?limit=151")
+    data = response.json()
+    random_pokemon_id = random.choice(data['results'])['url']
+    response = requests.get(random_pokemon_id)
+    return response.json()
+
+def get_pokemon_types(pokemon_data):
+    types = [type_['type']['name'] for type_ in pokemon_data['types']]
+    return ', '.join(types)
+
+def display_pokemon(pokemon_data):
+    pokemon_name = pokemon_data['name']
+    display = ['_' if letter in string.ascii_letters else letter for letter in pokemon_name]
+    return display
+
+def update_display(pokemon_display, guessed_letter, pokemon_name):
+    return [guessed_letter if guessed_letter == letter else letter for letter, guessed in zip(pokemon_name, pokemon_display)]
+
+def main():
+    lives = 6
+    pokemon_data = get_random_pokemon()
+    pokemon_name = pokemon_data['name']
+    pokemon_display = display_pokemon(pokemon_data)
+    pokemon_types = get_pokemon_types(pokemon_data)
+
+    print(f"Welcome to the Pokémon Guessing Game! The Pokémon's type is: {pokemon_types}")
+    
+    while lives > 0:
+        print(' '.join(pokemon_display))
+        
+        # Web browsers need a prompt window for inputs, so we use JavaScript's prompt here!
+        from js import prompt
+        guess = prompt("Guess a letter:")
+        
+        if not guess:
+            continue
+        guess = guess.lower()
+        
+        if guess in string.ascii_letters and guess in pokemon_name:
+            pokemon_display = update_display(pokemon_display, guess, pokemon_name)
+            if ''.join(pokemon_display) == pokemon_name:
+                print("Congratulations! You guessed the Pokémon!")
+                print(pokeball_art)
+                break
+        else:
+            lives -= 1
+            print(f"Wrong guess! Lives remaining: {lives}")
+    else:
+        print(f"Game over! The Pokémon was {pokemon_name}.")
+
+# Start the game loop automatically
+main()
+    </script>
+
+</body>
+</html>
